@@ -1,0 +1,1 @@
+Add-windowsFeature ADFS-Federation -IncludeManagementTools

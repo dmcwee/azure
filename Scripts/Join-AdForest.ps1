@@ -1,0 +1,1 @@
+Add-Computer -DN corpnet.org
