@@ -1,0 +1,264 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "simpledemostoreType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "simpledemoVmNamePrefix": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "TspDemo"
+    },
+    "simpledemoDcCount": {
+      "type": "int",
+      "minValue": 1,
+      "maxValue": 8,
+      "defaultValue": 2
+    },
+    "simpledemodcAdminUserName": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "labadmin"
+    },
+    "simpledemodcAdminPassword": {
+      "type": "securestring"
+    },
+    "simpledemodcWindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2016-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "2016-Datacenter",
+        "Windows-Server-Technical-Preview"
+      ]
+    },
+    "simpledemoVmSize": {
+      "type": "string",
+      "defaultValue": "Basic_B3",
+      "allowedValues": [
+        "Basic_B1",
+        "Basic_B2",
+        "Basic_B3",
+        "Standard_A1",
+        "Standard_A2",
+        "Standard_A3"
+      ]
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    }
+  },
+  "variables": {
+    "tempstoreName": "[toLower(concat(resourceGroup().name, uniqueString(resourceGroup().id)))]",
+
+    "simpledemostoreNameLength": "[min(24, length(variables('tempstoreName')))]",
+    "simpledemostoreName": "[substring(variables('tempstoreName'), 0, variables('simpledemostoreNameLength'))]",
+
+    "simpledemonetPrefix": "10.0.0.0/16",
+    "simpledemonetSubnet1Name": "Subnet-1",
+    "simpledemonetSubnet1Prefix": "10.0.0.0/24",
+    "simpledemodcImagePublisher": "MicrosoftWindowsServer",
+    "simpledemodcImageOffer": "WindowsServer",
+    "simpledemodcVnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'simpledemonet')]",
+    "simpledemodcSubnetRef": "[concat(variables('simpledemodcVnetID'), '/subnets/', variables('simpledemonetSubnet1Name'))]",
+    "simpledemodcStorageAccountContainerName": "vhds",
+    "DCPrepScriptFolder": "CustomScripts",
+    "DCPrepScriptFileName": "DCPrep.ps1"
+  },
+  "resources": [
+    /*
+    Create the Storage Account for the demo
+    */
+    {
+      "name": "[variables('simpledemostoreName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('simpledemostoreType')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "simpledemostore"
+      },
+      "kind": "Storage"
+    },
+
+    /*
+    Create the virtual network and subnet
+    */
+    {
+      "name": "simpledemonet",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "simpledemonet"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('simpledemonetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('simpledemonetSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('simpledemonetSubnet1Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+
+    /*
+    Create the NICs for each VM
+    */
+    {
+      "copy": {
+        "name": "NicCreationCounter",
+        "count": "[parameters('simpledemoDcCount')]"
+      },
+      "name": "[concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-nic')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'simpledemonet')]"
+      ],
+      "tags": {
+        "displayName": "simpledemodcNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "[concat('10.0.0.', copyIndex(10))]",
+              "subnet": {
+                "id": "[variables('simpledemodcSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+
+    /*
+    Create the DCs
+    */
+    {
+      "copy": {
+        "name": "simpledemoVmCounter",
+        "count": "[parameters('simpledemoDcCount')]"
+      },
+      "name": "[concat(parameters('simpledemoVmNamePrefix'), '-DC', copyIndex())]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-nic'))]"
+      ],
+      "tags": {
+        "displayName": "[concat('DC ', copyIndex())]"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('simpledemoVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[concat(parameters('simpledemoVmNamePrefix'), '-DC', copyIndex())]",
+          "adminUsername": "[parameters('simpledemodcAdminUsername')]",
+          "adminPassword": "[parameters('simpledemodcAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('simpledemodcImagePublisher')]",
+            "offer": "[variables('simpledemodcImageOffer')]",
+            "sku": "[parameters('simpledemodcWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('simpledemoVmNamePrefix'), '-dc', copyIndex(), '-osdisk')]",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName')), '2016-01-01').primaryEndpoints.blob, variables('simpledemodcStorageAccountContainerName'), '/', parameters('simpledemoVmNamePrefix'), '-dc', copyIndex(), '-osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+              "name": "[concat(parameters('simpledemoVmNamePrefix'), '-dc', copyIndex(), '-datadisk')]",
+              "caching": "None",
+              "createOption": "Empty",
+              "diskSizeGB": "50",
+              "lun": 0,
+              "vhd": {
+                "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName')), '2016-01-01').primaryEndpoints.blob, variables('simpledemodcStorageAccountContainerName'), '/', parameters('simpledemoVmNamePrefix'), '-dc', copyIndex(), '-datadisk.vhd')]"
+              }
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-nic'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "name": "DCPrep",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('simpledemoVmNamePrefix'), '-DC', copyIndex()))]"
+          ],
+          "tags": {
+            "displayName": "DCPrep"
+          },
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.4",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('_artifactsLocation'), '/', variables('DCPrepScriptFolder'), '/', variables('DCPrepScriptFileName'), parameters('_artifactsLocationSasToken'))]"
+              ],
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('DCPrepScriptFolder'), '/', variables('DCPrepScriptFileName'))]"
+            },
+            "protectedSettings": {}
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {}
+}
