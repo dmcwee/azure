@@ -45,21 +45,21 @@
     },
     "simpledemoVmSize": {
       "type": "string",
-      "defaultValue": "Basic_B3",
+      "defaultValue": "Basic_A2",
       "allowedValues": [
-        "Basic_B1",
-        "Basic_B2",
-        "Basic_B3",
+        "Basic_A1",
+        "Basic_A2",
+        "Basic_A3",
+        "Basic_A4",
         "Standard_A1",
         "Standard_A2",
-        "Standard_A3"
+        "Standard_A3",
+        "Standard_A4"
       ]
     },
     "_artifactsLocation": {
       "type": "string",
-      "metadata": {
-        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
-      }
+      "defaultValue": "https://raw.githubusercontent.com/dmcwee/azure/tspdemos/SimpleDemo/SimpleDemo"
     },
     "_artifactsLocationSasToken": {
       "type": "securestring",
@@ -69,18 +69,25 @@
     }
   },
   "variables": {
+    //Storage Account Variables
     "tempstoreName": "[toLower(concat(resourceGroup().name, uniqueString(resourceGroup().id)))]",
-
     "simpledemostoreNameLength": "[min(24, length(variables('tempstoreName')))]",
     "simpledemostoreName": "[substring(variables('tempstoreName'), 0, variables('simpledemostoreNameLength'))]",
 
+    //OS Image Provider Variables
+    "simpledemodcImagePublisher": "MicrosoftWindowsServer",
+    "simpledemodcImageOffer": "WindowsServer",
+
+    //Network Variables
+    "simpledemonetName": "simpledemonet",
     "simpledemonetPrefix": "10.0.0.0/16",
     "simpledemonetSubnet1Name": "Subnet-1",
     "simpledemonetSubnet1Prefix": "10.0.0.0/24",
-    "simpledemodcImagePublisher": "MicrosoftWindowsServer",
-    "simpledemodcImageOffer": "WindowsServer",
     "simpledemodcVnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'simpledemonet')]",
     "simpledemodcSubnetRef": "[concat(variables('simpledemodcVnetID'), '/subnets/', variables('simpledemonetSubnet1Name'))]",
+    "simpledemoGatewaySubnetName": "GatewaySubnet",
+
+    //VM Variables
     "simpledemodcStorageAccountContainerName": "vhds",
     "DCPrepScriptFolder": "CustomScripts",
     "DCPrepScriptFileName": "DCPrep.ps1"
@@ -108,7 +115,7 @@
     Create the virtual network and subnet
     */
     {
-      "name": "simpledemonet",
+      "name": "[variables('simpledemonetName')]",
       "type": "Microsoft.Network/virtualNetworks",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
@@ -128,9 +135,94 @@
             "properties": {
               "addressPrefix": "[variables('simpledemonetSubnet1Prefix')]"
             }
+          },
+          {
+            "name": "[variables('simpledemoGatewaySubnetName')]",
+            "properties": {
+              "addressPrefix": "10.0.1.0/24"
+            }
           }
         ]
       }
+    },
+
+    /*
+    Create Public IP objects for the gateway
+    */
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-gwpip')]",
+      "apiVersion": "2016-03-30",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "idleTimeoutInMinutes": 4
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Network/virtualNetworkGateways/simpledemo-gw'.",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "name": "[concat(parameters('simpledemoVmNamePrefix'), '-gateway')]",
+      "apiVersion": "2017-06-01",
+      "location": "[resourceGroup().location]",
+      "scale": null,
+      "properties": {
+        //"resourceGuid": "608718f8-e8e2-4b07-a5f0-044daed93813",
+        "ipConfigurations": [
+          {
+            "name": "default",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-gwpip'))]"
+              },
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('simpledemonetName'), variables('simpledemoGatewaySubnetName'))]"
+              }
+            }
+          }
+        ],
+        "sku": {
+          "name": "Basic",
+          "tier": "Basic",
+          "capacity": 2
+        },
+        "gatewayType": "Vpn",
+        "vpnType": "RouteBased",
+        "enableBgp": false,
+        "activeActive": false,
+        "vpnClientConfiguration": {
+          "vpnClientAddressPool": {
+            "addressPrefixes": [
+              "192.168.10.0/24"
+            ]
+          },
+          "vpnClientProtocols": [
+            "SSTP"
+          ],
+          "vpnClientRootCertificates": [
+            {
+              "name": "AzureGatewayRootCert",
+              "properties": {
+                "publicCertData": "MIIC+TCCAeGgAwIBAgIQUlvZgSVPCo1FUmPWLj5yqDANBgkqhkiG9w0BAQsFADAf MR0wGwYDVQQDDBRHYXRld2F5VGVzdDJSb290Q2VydDAeFw0xODAxMjUxOTIwMzJa Fw0xOTAxMjUxOTQwMzJaMB8xHTAbBgNVBAMMFEdhdGV3YXlUZXN0MlJvb3RDZXJ0 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA++8zGneEVvFR6zy7gQIc b/Cu5ic9cTMHUOcb652Id1ocxZ0Ir4/oIywJgmALJSS7Li7lAAVj0GlJLYl84ljT W5umQJlvuRGZlSTMXJn1bMZ5kj4rRQAfq544Kj1dAwrs95L+9Pv3B+w/mG8r4Pby ko6XTSSHgT3PmSsTGVIytllj/kaxdSe8qcR6+sjbFtybdy2GONyLhHyccAMGEZz7 D0PpZIm2KOrtnJJZvMjWmYJzD79tcHJn1LtVKQ5azbCek7lhq5ocTgDAFA9Xfiso CLYEn+mZJG2BUn5scg+Z2IGfWRlqKBMwzbYkjBAkKuKqFvL/eAOlxudnP60BCGbI 1QIDAQABozEwLzAOBgNVHQ8BAf8EBAMCAgQwHQYDVR0OBBYEFInQD5lgUDAbAxEq wMUsccEibYBdMA0GCSqGSIb3DQEBCwUAA4IBAQC/l66A+dQ1QH3gTTaNA4tiS12A s67yGNJnNjJk6OARqTVtgbHf/uFWDJ2LDUIaV7FpXE3i1cFj+QTes/nEbaaBv3/s dGmJQdc5PJQEiglNT+45CfkRq/kdeWVMfhC8FBtjXHkAJRItyhBOe8+0ePD5/zuJ U1ueS0AJeqXin62+ES7ykzna7TMGQeNTgJfi2GarLfs50XyiseAHVyECuqJryhBG RQeE1L3gSCDir0RTbqGzO9tE3XyWhF4kDPrdoE+R5Dn7fMSqz4pCsNVMqe4UTBTC 9WLQVVKUTcFZYuNq7gAD2SPTcz38taVfCrvO+cfN07oM2ysnuhiKp+GtKhug"
+              }
+            }
+          ],
+          "vpnClientRevokedCertificates": []
+        },
+        "bgpSettings": {
+          "asn": 65515,
+          "bgpPeeringAddress": "10.0.1.254",
+          "peerWeight": 0
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-gwpip'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('simpledemonetName'), variables('simpledemoGatewaySubnetName'))]"
+      ]
     },
 
     /*
