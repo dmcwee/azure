@@ -1,0 +1,516 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "virtualMachines_TspDemo_DC0_name": {
+      "defaultValue": "TspDemo-DC0",
+      "type": "String"
+    },
+    "virtualMachines_TspDemo_DC1_name": {
+      "defaultValue": "TspDemo-DC1",
+      "type": "String"
+    },
+    "virtualNetworks_simpledemonet_name": {
+      "defaultValue": "simpledemonet",
+      "type": "String"
+    },
+    "networkInterfaces_TspDemo0_nic_name": {
+      "defaultValue": "TspDemo0-nic",
+      "type": "String"
+    },
+    "networkInterfaces_TspDemo1_nic_name": {
+      "defaultValue": "TspDemo1-nic",
+      "type": "String"
+    },
+    "publicIPAddresses_simpledemogw_ip_name": {
+      "defaultValue": "simpledemogw-ip",
+      "type": "String"
+    },
+    "virtualNetworkGateways_simpledemo_gw_name": {
+      "defaultValue": "simpledemo-gw",
+      "type": "String"
+    },
+    "storageAccounts_simpledemogcl2534iephmw_name": {
+      "defaultValue": "simpledemogcl2534iephmw",
+      "type": "String"
+    },
+    "extensions_DCPrep_name": {
+      "defaultValue": "DCPrep",
+      "type": "String"
+    },
+    "extensions_DCPrep_name_1": {
+      "defaultValue": "DCPrep",
+      "type": "String"
+    },
+    "subnets_Subnet_1_name": {
+      "defaultValue": "Subnet-1",
+      "type": "String"
+    },
+    "subnets_GatewaySubnet_name": {
+      "defaultValue": "GatewaySubnet",
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Compute/virtualMachines/TspDemo-DC0'.",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('virtualMachines_TspDemo_DC0_name')]",
+      "apiVersion": "2017-03-30",
+      "location": "eastus",
+      "tags": {
+        "displayName": "DC 0"
+      },
+      "scale": null,
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Basic_A2"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2016-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Windows",
+            "name": "[concat(parameters('virtualMachines_TspDemo_DC0_name'),'TspDemo-dc0-osdisk')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https', '://', parameters('storageAccounts_simpledemogcl2534iephmw_name'), '.blob.core.windows.net', concat('/vhds/TspDemo-dc0-osdisk.vhd'))]"
+            },
+            "caching": "ReadWrite",
+            "diskSizeGB": 127
+          },
+          "dataDisks": [
+            {
+              "lun": 0,
+              "name": "[concat(parameters('virtualMachines_TspDemo_DC0_name'),'TspDemo-dc0-datadisk')]",
+              "createOption": "Empty",
+              "vhd": {
+                "uri": "[concat('https', '://', parameters('storageAccounts_simpledemogcl2534iephmw_name'), '.blob.core.windows.net', concat('/vhds/TspDemo-dc0-datadisk.vhd'))]"
+              },
+              "caching": "None",
+              "diskSizeGB": 50
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachines_TspDemo_DC0_name')]",
+          "adminUsername": "labadmin",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": []
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_TspDemo0_nic_name'))]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_simpledemogcl2534iephmw_name'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_TspDemo0_nic_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Compute/virtualMachines/TspDemo-DC1'.",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('virtualMachines_TspDemo_DC1_name')]",
+      "apiVersion": "2017-03-30",
+      "location": "eastus",
+      "tags": {
+        "displayName": "DC 1"
+      },
+      "scale": null,
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Basic_A2"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2016-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "osType": "Windows",
+            "name": "[concat(parameters('virtualMachines_TspDemo_DC1_name'),'TspDemo-dc1-osdisk')]",
+            "createOption": "FromImage",
+            "vhd": {
+              "uri": "[concat('https', '://', parameters('storageAccounts_simpledemogcl2534iephmw_name'), '.blob.core.windows.net', concat('/vhds/TspDemo-dc1-osdisk.vhd'))]"
+            },
+            "caching": "ReadWrite",
+            "diskSizeGB": 127
+          },
+          "dataDisks": [
+            {
+              "lun": 0,
+              "name": "[concat(parameters('virtualMachines_TspDemo_DC1_name'),'TspDemo-dc1-datadisk')]",
+              "createOption": "Empty",
+              "vhd": {
+                "uri": "[concat('https', '://', parameters('storageAccounts_simpledemogcl2534iephmw_name'), '.blob.core.windows.net', concat('/vhds/TspDemo-dc1-datadisk.vhd'))]"
+              },
+              "caching": "None",
+              "diskSizeGB": 50
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[parameters('virtualMachines_TspDemo_DC1_name')]",
+          "adminUsername": "labadmin",
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "enableAutomaticUpdates": true
+          },
+          "secrets": []
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_TspDemo1_nic_name'))]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_simpledemogcl2534iephmw_name'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_TspDemo1_nic_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Network/networkInterfaces/TspDemo0-nic'.",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('networkInterfaces_TspDemo0_nic_name')]",
+      "apiVersion": "2017-06-01",
+      "location": "eastus",
+      "tags": {
+        "displayName": "simpledemodcNic"
+      },
+      "scale": null,
+      "properties": {
+        "provisioningState": "Succeeded",
+        "resourceGuid": "cc9b047b-0925-429c-afbb-2af17ce1ff9b",
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "etag": "W/\"0087a11f-2ed7-41e7-830b-e59074b043ab\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "privateIPAddress": "10.0.0.10",
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_simpledemonet_name'), parameters('subnets_Subnet_1_name'))]"
+              },
+              "primary": true,
+              "privateIPAddressVersion": "IPv4"
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [],
+          "appliedDnsServers": [],
+          "internalDomainNameSuffix": "40rfrgk25f2u3lsjx1kf5cpn2b.bx.internal.cloudapp.net"
+        },
+        "macAddress": "00-0D-3A-18-9F-8F",
+        "enableAcceleratedNetworking": false,
+        "enableIPForwarding": false,
+        "primary": true,
+        "virtualMachine": {
+          "id": "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_TspDemo_DC0_name'))]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_simpledemonet_name'), parameters('subnets_Subnet_1_name'))]",
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_TspDemo_DC0_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Network/networkInterfaces/TspDemo1-nic'.",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[parameters('networkInterfaces_TspDemo1_nic_name')]",
+      "apiVersion": "2017-06-01",
+      "location": "eastus",
+      "tags": {
+        "displayName": "simpledemodcNic"
+      },
+      "scale": null,
+      "properties": {
+        "provisioningState": "Succeeded",
+        "resourceGuid": "2d876cf4-731e-4af0-b1bb-36028401b1e0",
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "etag": "W/\"4c6e0805-78ba-4cd1-a5e8-de06b3937531\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "privateIPAddress": "10.0.0.11",
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_simpledemonet_name'), parameters('subnets_Subnet_1_name'))]"
+              },
+              "primary": true,
+              "privateIPAddressVersion": "IPv4"
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": [],
+          "appliedDnsServers": [],
+          "internalDomainNameSuffix": "40rfrgk25f2u3lsjx1kf5cpn2b.bx.internal.cloudapp.net"
+        },
+        "macAddress": "00-0D-3A-14-B8-1B",
+        "enableAcceleratedNetworking": false,
+        "enableIPForwarding": false,
+        "primary": true,
+        "virtualMachine": {
+          "id": "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_TspDemo_DC1_name'))]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_simpledemonet_name'), parameters('subnets_Subnet_1_name'))]",
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_TspDemo_DC1_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Network/publicIPAddresses/simpledemogw-ip'.",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[parameters('publicIPAddresses_simpledemogw_ip_name')]",
+      "apiVersion": "2017-06-01",
+      "location": "eastus",
+      "scale": null,
+      "properties": {
+        "provisioningState": "Succeeded",
+        "resourceGuid": "25c00811-cd5e-4367-a6a7-c89637d2e6a2",
+        "ipAddress": "52.168.106.139",
+        "publicIPAddressVersion": "IPv4",
+        "publicIPAllocationMethod": "Dynamic",
+        "idleTimeoutInMinutes": 4
+      },
+      "dependsOn": []
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Network/virtualNetworkGateways/simpledemo-gw'.",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "name": "[parameters('virtualNetworkGateways_simpledemo_gw_name')]",
+      "apiVersion": "2017-06-01",
+      "location": "eastus",
+      "scale": null,
+      "properties": {
+        "resourceGuid": "608718f8-e8e2-4b07-a5f0-044daed93813",
+        "ipConfigurations": [
+          {
+            "name": "default",
+            "etag": "W/\"53b0def3-d4a5-4f8e-b496-53e3f4f4de31\"",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_simpledemogw_ip_name'))]"
+              },
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_simpledemonet_name'), parameters('subnets_GatewaySubnet_name'))]"
+              }
+            }
+          }
+        ],
+        "sku": {
+          "name": "Basic",
+          "tier": "Basic",
+          "capacity": 2
+        },
+        "gatewayType": "Vpn",
+        "vpnType": "RouteBased",
+        "enableBgp": false,
+        "activeActive": false,
+        "vpnClientConfiguration": {
+          "vpnClientAddressPool": {
+            "addressPrefixes": [
+              "192.168.10.0/24"
+            ]
+          },
+          "vpnClientProtocols": [
+            "SSTP"
+          ],
+          "vpnClientRootCertificates": [
+            {
+              "name": "AzureTest2RootCert",
+              "etag": "W/\"53b0def3-d4a5-4f8e-b496-53e3f4f4de31\"",
+              "properties": {
+                "publicCertData": "MIIC+TCCAeGgAwIBAgIQUlvZgSVPCo1FUmPWLj5yqDANBgkqhkiG9w0BAQsFADAf MR0wGwYDVQQDDBRHYXRld2F5VGVzdDJSb290Q2VydDAeFw0xODAxMjUxOTIwMzJa Fw0xOTAxMjUxOTQwMzJaMB8xHTAbBgNVBAMMFEdhdGV3YXlUZXN0MlJvb3RDZXJ0 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA++8zGneEVvFR6zy7gQIc b/Cu5ic9cTMHUOcb652Id1ocxZ0Ir4/oIywJgmALJSS7Li7lAAVj0GlJLYl84ljT W5umQJlvuRGZlSTMXJn1bMZ5kj4rRQAfq544Kj1dAwrs95L+9Pv3B+w/mG8r4Pby ko6XTSSHgT3PmSsTGVIytllj/kaxdSe8qcR6+sjbFtybdy2GONyLhHyccAMGEZz7 D0PpZIm2KOrtnJJZvMjWmYJzD79tcHJn1LtVKQ5azbCek7lhq5ocTgDAFA9Xfiso CLYEn+mZJG2BUn5scg+Z2IGfWRlqKBMwzbYkjBAkKuKqFvL/eAOlxudnP60BCGbI 1QIDAQABozEwLzAOBgNVHQ8BAf8EBAMCAgQwHQYDVR0OBBYEFInQD5lgUDAbAxEq wMUsccEibYBdMA0GCSqGSIb3DQEBCwUAA4IBAQC/l66A+dQ1QH3gTTaNA4tiS12A s67yGNJnNjJk6OARqTVtgbHf/uFWDJ2LDUIaV7FpXE3i1cFj+QTes/nEbaaBv3/s dGmJQdc5PJQEiglNT+45CfkRq/kdeWVMfhC8FBtjXHkAJRItyhBOe8+0ePD5/zuJ U1ueS0AJeqXin62+ES7ykzna7TMGQeNTgJfi2GarLfs50XyiseAHVyECuqJryhBG RQeE1L3gSCDir0RTbqGzO9tE3XyWhF4kDPrdoE+R5Dn7fMSqz4pCsNVMqe4UTBTC 9WLQVVKUTcFZYuNq7gAD2SPTcz38taVfCrvO+cfN07oM2ysnuhiKp+GtKhug"
+              }
+            }
+          ],
+          "vpnClientRevokedCertificates": []
+        },
+        "bgpSettings": {
+          "asn": 65515,
+          "bgpPeeringAddress": "10.0.1.254",
+          "peerWeight": 0
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_simpledemogw_ip_name'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_simpledemonet_name'), parameters('subnets_GatewaySubnet_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Network/virtualNetworks/simpledemonet'.",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetworks_simpledemonet_name')]",
+      "apiVersion": "2017-06-01",
+      "location": "eastus",
+      "tags": {
+        "displayName": "simpledemonet"
+      },
+      "scale": null,
+      "properties": {
+        "provisioningState": "Succeeded",
+        "resourceGuid": "9958a2f6-f95c-4e79-ae49-bed45f89ede1",
+        "addressSpace": {
+          "addressPrefixes": [
+            "10.0.0.0/16"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "Subnet-1",
+            "etag": "W/\"af5e8506-edfc-4fa1-8fc7-66ca0403f74c\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "addressPrefix": "10.0.0.0/24"
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "etag": "W/\"af5e8506-edfc-4fa1-8fc7-66ca0403f74c\"",
+            "properties": {
+              "provisioningState": "Succeeded",
+              "addressPrefix": "10.0.1.0/24"
+            }
+          }
+        ],
+        "virtualNetworkPeerings": []
+      },
+      "dependsOn": []
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Storage/storageAccounts/simpledemogcl2534iephmw'.",
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "Storage",
+      "name": "[parameters('storageAccounts_simpledemogcl2534iephmw_name')]",
+      "apiVersion": "2017-06-01",
+      "location": "eastus",
+      "tags": {
+        "displayName": "simpledemostore"
+      },
+      "scale": null,
+      "properties": {
+        "encryption": {
+          "services": {
+            "file": {
+              "enabled": true
+            },
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
+      },
+      "dependsOn": []
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Compute/virtualMachines/TspDemo-DC0/extensions/DCPrep'.",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('virtualMachines_TspDemo_DC0_name'), '/', parameters('extensions_DCPrep_name'))]",
+      "apiVersion": "2017-03-30",
+      "location": "eastus",
+      "tags": {
+        "displayName": "DCPrep"
+      },
+      "scale": null,
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.4",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "https://raw.githubusercontent.com/dmcwee/azure/tspdemos/SimpleDemo/SimpleDemo/CustomScripts/DCPrep.ps1/CustomScripts/DCPrep.ps1"
+          ],
+          "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File CustomScripts/', parameters('extensions_DCPrep_name'),'.ps1')]"
+        },
+        "protectedSettings": {}
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_TspDemo_DC0_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Compute/virtualMachines/TspDemo-DC1/extensions/DCPrep'.",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('virtualMachines_TspDemo_DC1_name'), '/', parameters('extensions_DCPrep_name_1'))]",
+      "apiVersion": "2017-03-30",
+      "location": "eastus",
+      "tags": {
+        "displayName": "DCPrep"
+      },
+      "scale": null,
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.4",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "fileUris": [
+            "https://raw.githubusercontent.com/dmcwee/azure/tspdemos/SimpleDemo/SimpleDemo/CustomScripts/DCPrep.ps1/CustomScripts/DCPrep.ps1"
+          ],
+          "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File CustomScripts/', parameters('extensions_DCPrep_name_1'),'.ps1')]"
+        },
+        "protectedSettings": {}
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_TspDemo_DC1_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Network/virtualNetworks/simpledemonet/subnets/Subnet-1'.",
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "name": "[concat(parameters('virtualNetworks_simpledemonet_name'), '/', parameters('subnets_Subnet_1_name'))]",
+      "apiVersion": "2017-06-01",
+      "scale": null,
+      "properties": {
+        "provisioningState": "Succeeded",
+        "addressPrefix": "10.0.0.0/24"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_simpledemonet_name'))]"
+      ]
+    },
+    {
+      "comments": "Generalized from resource: '/subscriptions/6cc1e9bb-0726-4af1-a734-3dcaa6fb8e61/resourceGroups/simpledemo/providers/Microsoft.Network/virtualNetworks/simpledemonet/subnets/GatewaySubnet'.",
+      "type": "Microsoft.Network/virtualNetworks/subnets",
+      "name": "[concat(parameters('virtualNetworks_simpledemonet_name'), '/', parameters('subnets_GatewaySubnet_name'))]",
+      "apiVersion": "2017-06-01",
+      "scale": null,
+      "properties": {
+        "provisioningState": "Succeeded",
+        "addressPrefix": "10.0.1.0/24"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworks_simpledemonet_name'))]"
+      ]
+    }
+  ]
+}
