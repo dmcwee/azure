@@ -86,7 +86,7 @@
     "simpledemoGatewaySubnetName": "GatewaySubnet",
 
     //VM Variables
-    "simpledemodcStorageAccountContainerName": "vhds",
+    "simpledemodcStorageAccountContainerName": "vhds"
   },
   "resources": [
     /*
