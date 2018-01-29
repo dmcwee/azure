@@ -18,6 +18,7 @@ Node $nodeName
 	  WindowsFeature ADTools {
 		  Name="RSAT-AD-Tools"
 		  Ensure = "Present"
+		  IncludeAllSubFeature = $true
 	  }
   }
 }
