@@ -1,0 +1,537 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "AdvDemoStorageType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "AdvDemoWindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2016-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "2016-DataCenter",
+        "Windows-Server-Technical-Preview"
+      ]
+    },
+    "AdvDemoVmSize": {
+      "type": "string",
+      "defaultValue": "Basic_A2",
+      "allowedValues": [
+        "Basic_A1",
+        "Basic_A2",
+        "Basic_A3",
+        "Basic_A4",
+        "Standard_A1",
+        "Standard_A2",
+        "Standard_A3",
+        "Standard_A4"
+      ]
+    },
+    "AdvDemoAdminUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "AdvDemoAdminPassword": {
+      "type": "securestring"
+    },
+    "AdvDemoDCName": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "Demo-DC"
+    },
+    "AdvDemoADFSName": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "Demo-ADFS"
+    },
+    "AdvDemoWAPName": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "Demo-WAP"
+    },
+    "AdvDemoWAP-pipDnsName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    }
+  },
+  "variables": {
+    "tmpDemoStorageName": "[concat('AdvDemoStorage', uniqueString(resourceGroup().id))]",
+    "AdvDemoStorageName": "[substring(variables('tmpDemoStorageName'), 0, min(16, length(variables('tmpDemoStorageName'))))]",
+
+    /* Windows OS Publisher Variables */
+    "AdvDemoWinImagePublisher": "MicrosoftWindowsServer",
+    "AdvDemoWinImageOffer": "WindowsServer",
+
+    /* VNet Variables */
+    "AdvDemoNetPrefix": "10.0.0.0/16",
+    "AdvDemoNetSubnet1Name": "Subnet-1",
+    "AdvDemoNetSubnet1Prefix": "10.0.0.0/24",
+    "AdvDemoVnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'AdvDemoNet')]",
+    "AdvDemoSubnetRef": "[concat(variables('AdvDemoVnetID'), '/subnets/', variables('AdvDemoNetSubnet1Name'))]",
+    "AdvDemoStorageAccountContainerName": "vhds",
+
+    /* DC VM Variables */
+    "AdvDemoDCNicName": "[concat(parameters('AdvDemoDCName'), '-NIC')]",
+
+    /* ADFS VM Variables */
+    "AdvDemoADFSNicName": "[concat(parameters('AdvDemoADFSName'), '-NIC')]",
+
+    /* WAP VM Variables */
+    "AdvDemoWAPNicName": "[concat(parameters('AdvDemoWAPName'), '-NIC')]",
+    "AdvDemoWAP-pipName": "[concat(parameters('AdvDemoWAPName'), '-PIP')]",
+    "DomainControllerDSCArchiveFolder": "DSC",
+    "DomainControllerDSCArchiveFileName": "DomainControllerDSC.zip"
+  },
+  "resources": [
+    /*
+    Create Storage Account
+    */
+    {
+      "name": "[variables('AdvDemoStorageName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('AdvDemoStorageType')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "AdvDemoStorage"
+      },
+      "kind": "Storage"
+    },
+
+    /*
+    Create Virtual Network
+    */
+    {
+      "name": "AdvDemoNet",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "AdvDemoNet"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('AdvDemoNetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('AdvDemoNetSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('AdvDemoNetSubnet1Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+
+    /*
+    Create NIC for Domain Controller
+    */
+    {
+      "name": "[variables('AdvDemoDCNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'AdvDemoNet')]"
+      ],
+      "tags": {
+        "displayName": "AdvDemoDCNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "10.0.0.10",
+              "subnet": {
+                "id": "[variables('AdvDemoSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+
+    /*
+    Create the Domain Controller
+    */
+    {
+      "name": "[parameters('AdvDemoDCName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('AdvDemoStorageName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('AdvDemoDCNicName'))]"
+      ],
+      "tags": {
+        "displayName": "AdvDemoDC"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('AdvDemoVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('AdvDemoDCName')]",
+          "adminUsername": "[parameters('AdvDemoAdminUserName')]",
+          "adminPassword": "[parameters('AdvDemoAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('AdvDemoWinImagePublisher')]",
+            "offer": "[variables('AdvDemoWinImageOffer')]",
+            "sku": "[parameters('AdvDemoWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "AdvDemoDCOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('AdvDemoStorageName')), '2016-01-01').primaryEndpoints.blob, variables('AdvDemoStorageAccountContainerName'), '/', parameters('AdvDemoDCName'), '-osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          },
+          "dataDisks": [
+            {
+              "name": "AdvDemoDCDataDisk",
+              "caching": "None",
+              "createOption": "Empty",
+              "diskSizeGB": "50",
+              "lun": 0,
+              "vhd": {
+                "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('AdvDemoStorageName')), '2016-01-01').primaryEndpoints.blob, variables('AdvDemoStorageAccountContainerName'), '/', parameters('AdvDemoDCName'), '-datadisk.vhd')]"
+              }
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('AdvDemoDCNicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "name": "Microsoft.Powershell.DSC",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoDCName'))]"
+          ],
+          "tags": {
+            "displayName": "DomainControllerDSC"
+          },
+          "properties": {
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.9",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "configuration": {
+                "url": "[concat(parameters('_artifactsLocation'), '/', variables('DomainControllerDSCArchiveFolder'), '/', variables('DomainControllerDSCArchiveFileName'))]",
+                "script": "DomainControllerDSC.ps1",
+                "function": "Main"
+              },
+              "configurationArguments": {
+                "nodeName": "[parameters('AdvDemoDCName')]"
+              },
+              "configurationFunction": "Main",
+              "modulesUrl": "[concat(parameters('_artifactsLocation'), '/', variables('DomainControllerDSCArchiveFolder'), '/', variables('DomainControllerDSCArchiveFileName'))]"
+            },
+            "protectedSettings": {
+              "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+            }
+          }
+        }
+      ]
+    },
+    /*
+    Create ADFS VM NIC
+    */
+    {
+      "name": "[variables('AdvDemoADFSNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'AdvDemoNet')]"
+      ],
+      "tags": {
+        "displayName": "AdvDemoADFSNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "10.0.0.11",
+              "subnet": {
+                "id": "[variables('AdvDemoSubnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    /*
+    Create ADFS VM
+    */
+    {
+      "name": "[parameters('AdvDemoADFSName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('AdvDemoStorageName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('AdvDemoADFSNicName'))]"
+      ],
+      "tags": {
+        "displayName": "AdvDemoADFS"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('AdvDemoVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('AdvDemoADFSName')]",
+          "adminUsername": "[parameters('AdvDemoAdminUsername')]",
+          "adminPassword": "[parameters('AdvDemoAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('AdvDemoWinImagePublisher')]",
+            "offer": "[variables('AdvDemoWinImageOffer')]",
+            "sku": "[parameters('AdvDemoWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "AdvDemoADFSOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('AdvDemoStorageName')), '2016-01-01').primaryEndpoints.blob, variables('AdvDemoStorageAccountContainerName'), '/', parameters('AdvDemoADFSName'), '-osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('AdvDemoADFSNicName'))]"
+            }
+          ]
+        },
+
+        "resources": [
+          {
+            "name": "Microsoft.Powershell.DSC",
+            "type": "extensions",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2016-03-30",
+            "dependsOn": [
+              "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoADFSName'))]"
+            ],
+            "tags": {
+              "displayName": "DomainControllerDSC"
+            },
+            "properties": {
+              "publisher": "Microsoft.Powershell",
+              "type": "DSC",
+              "typeHandlerVersion": "2.9",
+              "autoUpgradeMinorVersion": true,
+              "settings": {
+                "configuration": {
+                  "url": "[concat(parameters('_artifactsLocation'), '/', variables('DomainControllerDSCArchiveFolder'), '/', variables('DomainControllerDSCArchiveFileName'))]",
+                  "script": "ADFSDSC.ps1",
+                  "function": "Main"
+                },
+                "configurationArguments": {
+                  "nodeName": "[parameters('AdvDemoADFSName')]"
+                },
+                "configurationFunction": "Main",
+                "modulesUrl": "[concat(parameters('_artifactsLocation'), '/', variables('DomainControllerDSCArchiveFolder'), '/', variables('DomainControllerDSCArchiveFileName'))]"
+              },
+              "protectedSettings": {
+                "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+
+    /*
+    Create WAP NIC
+    */
+    {
+      "name": "[variables('AdvDemoWAPNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'AdvDemoNet')]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('AdvDemoWAP-pipName'))]"
+      ],
+      "tags": {
+        "displayName": "AdvDemoWAPNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "10.0.0.12",
+              "subnet": {
+                "id": "[variables('AdvDemoSubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('AdvDemoWAP-pipName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+
+    /*
+    Create WAP VM
+    */
+    {
+      "name": "[parameters('AdvDemoWAPName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('AdvDemoStorageName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('AdvDemoWAPNicName'))]"
+      ],
+      "tags": {
+        "displayName": "AdvDemoWAP"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('AdvDemoVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('AdvDemoWAPName')]",
+          "adminUsername": "[parameters('AdvDemoAdminUsername')]",
+          "adminPassword": "[parameters('AdvDemoAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('AdvDemoWinImagePublisher')]",
+            "offer": "[variables('AdvDemoWinImageOffer')]",
+            "sku": "[parameters('AdvDemoWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "AdvDemoWAPOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('AdvDemoStorageName')), '2016-01-01').primaryEndpoints.blob, variables('AdvDemoStorageAccountContainerName'), '/', parameters('AdvDemoWAPName'), '-osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('AdvDemoWAPNicName'))]"
+            }
+          ]
+        },
+
+        "resources": [
+          {
+            "name": "Microsoft.Powershell.DSC",
+            "type": "extensions",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2016-03-30",
+            "dependsOn": [
+              "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoWAPName'))]"
+            ],
+            "tags": {
+              "displayName": "DomainControllerDSC"
+            },
+            "properties": {
+              "publisher": "Microsoft.Powershell",
+              "type": "DSC",
+              "typeHandlerVersion": "2.9",
+              "autoUpgradeMinorVersion": true,
+              "settings": {
+                "configuration": {
+                  "url": "[concat(parameters('_artifactsLocation'), '/', variables('DomainControllerDSCArchiveFolder'), '/', variables('DomainControllerDSCArchiveFileName'))]",
+                  "script": "WAPDSC.ps1",
+                  "function": "Main"
+                },
+                "configurationArguments": {
+                  "nodeName": "[parameters('AdvDemoWAPName')]"
+                },
+                "configurationFunction": "Main",
+                "modulesUrl": "[concat(parameters('_artifactsLocation'), '/', variables('DomainControllerDSCArchiveFolder'), '/', variables('DomainControllerDSCArchiveFileName'))]"
+              },
+              "protectedSettings": {
+                "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    /*
+    Create Public IP for WAP
+    */
+    {
+      "name": "[variables('AdvDemoWAP-pipName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "AdvDemoWAP-pip"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('AdvDemoWAP-pipDnsName')]"
+        }
+      }
+    }
+  ],
+  "outputs": {}
+}
