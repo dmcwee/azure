@@ -31,6 +31,9 @@
       <Visible>False</Visible>
     </None>
     <Content Include="Deploy-AzureResourceGroup.ps1" />
+    <Content Include="DSC\WAPDSC.ps1" />
+    <Content Include="DSC\ADFSDSC.ps1" />
+    <Content Include="DSC\DomainControllerDSC.ps1" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>
