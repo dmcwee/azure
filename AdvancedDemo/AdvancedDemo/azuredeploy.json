@@ -65,6 +65,10 @@
       "type": "string",
       "minLength": 1
     },
+    "AdvDemoGatwayDns":{
+      "type": "string",
+      "minLength": 1
+    },
     "_artifactsLocation": {
       "type": "string",
       "metadata": {
@@ -85,8 +89,12 @@
     "AdvDemoNetPrefix": "10.0.0.0/16",
     "AdvDemoNetSubnet1Name": "Subnet-1",
     "AdvDemoNetSubnet1Prefix": "10.0.0.0/24",
+    "AdvDemoGatewaySubnetPrefix":"10.0.2.0/24",
     "AdvDemoVnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'AdvDemoNet')]",
     "AdvDemoSubnetRef": "[concat(variables('AdvDemoVnetID'), '/subnets/', variables('AdvDemoNetSubnet1Name'))]",
+    "AdvDemoGatwayPIPName": "VNet-GWPip",
+
+    /* VM VHD Storage location */
     "AdvDemoStorageAccountContainerName": "vhds",
 
     /* DC VM Variables */
@@ -141,6 +149,12 @@
             "name": "[variables('AdvDemoNetSubnet1Name')]",
             "properties": {
               "addressPrefix": "[variables('AdvDemoNetSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties":{
+              "addressPrefix": "[variables('AdvDemoGatewaySubnetPrefix')]"
             }
           }
         ]
@@ -506,6 +520,22 @@
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
           "domainNameLabel": "[parameters('AdvDemoWAP-pipDnsName')]"
+        }
+      }
+    },
+    {
+      "name": "VNet-GWPip",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "AdvDemoGW-pip"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('AdvDemoGatwayDns')]"
         }
       }
     }

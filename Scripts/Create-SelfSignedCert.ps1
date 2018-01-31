@@ -1,12 +1,12 @@
 ﻿param($CertName="AzureGateway")
 
-$subject = "CN=" + $CertName + "RootCert"
+$subject = "CN=" + $CertName + ".RootCert"
 Write-Verbose "Subject $subject"
 
 $cert = New-SelfSignedCertificate -Type Custom -KeySpec Signature -Subject $subject -KeyExportPolicy Exportable `
 -HashAlgorithm sha256 -KeyLength 2048 -CertStoreLocation "Cert:\CurrentUser\My" -KeyUsageProperty Sign -KeyUsage CertSign
 
-$childSubject = "CN=" + $CertName + "ChildCert"
+$childSubject = "CN=" + $CertName + ".ChildCert"
 
 New-SelfSignedCertificate -Type Custom -KeySpec Signature -Subject $childSubject -KeyExportPolicy Exportable `
 -HashAlgorithm sha256 -KeyLength 2048 -CertStoreLocation "Cert:\CurrentUser\My" `
