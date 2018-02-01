@@ -22,7 +22,7 @@
       "type": "int",
       "minValue": 1,
       "maxValue": 8,
-      "defaultValue": 2
+      "defaultValue": 1
     },
     "simpledemodcAdminUserName": {
       "type": "string",

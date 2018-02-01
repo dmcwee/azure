@@ -24,6 +24,15 @@
         "Windows-Server-Technical-Preview"
       ]
     },
+    "AdvDemoClientOSVersion":{
+      "type":"string",
+      "defaultValue":"Windows-10-N-x64",
+      "allowedValues": [
+        "Win7-SP1-ENT-N-x64",
+        "Win81-ENT-N-x64",
+        "Windows-10-N-x64"
+      ]
+    },
     "AdvDemoVmSize": {
       "type": "string",
       "defaultValue": "Basic_A2",
@@ -69,6 +78,15 @@
       "type": "string",
       "minLength": 1
     },
+    "AdvDemoClientName":{
+      "type":"string",
+      "minLength": 1,
+      "defaultValue": "Demo-Client"
+    },
+    "AdvDemoClientDNS":{
+      "type":"string",
+      "minLength": 1
+    },
     "_artifactsLocation": {
       "type": "string",
       "metadata": {
@@ -84,6 +102,8 @@
     /* Windows OS Publisher Variables */
     "AdvDemoWinImagePublisher": "MicrosoftWindowsServer",
     "AdvDemoWinImageOffer": "WindowsServer",
+    "AdvDemoClientImagePublisher":"MicrosoftVisualStudio",
+    "AdvDemoClientImageOffer":"Windows",
 
     /* VNet Variables */
     "AdvDemoNetPrefix": "10.0.0.0/16",
@@ -105,7 +125,11 @@
 
     /* WAP VM Variables */
     "AdvDemoWAPNicName": "[concat(parameters('AdvDemoWAPName'), '-NIC')]",
-    "AdvDemoWAP-pipName": "[concat(parameters('AdvDemoWAPName'), '-PIP')]"
+    "AdvDemoWAP-pipName": "[concat(parameters('AdvDemoWAPName'), '-PIP')]",
+
+    /* Client VM Variables */
+    "AdvDemoClientNICName":"[concat(parameters('AdvDemoClientName'), '-NIC')]",
+    "AdvDemoClientPIP":"[concat(parameters('AdvDemoClientName'), '-PIP')]"
   },
   "resources": [
     /*
@@ -170,7 +194,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', 'AdvDemoNet')]"
+        "[variables('AdvDemoVnetID')]"
       ],
       "tags": {
         "displayName": "AdvDemoDCNic"
@@ -291,7 +315,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', 'AdvDemoNet')]"
+        "[variables('AdvDemoVnetID')]"
       ],
       "tags": {
         "displayName": "AdvDemoADFSNic"
@@ -400,7 +424,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', 'AdvDemoNet')]",
+        "[variables('AdvDemoVnetID')]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('AdvDemoWAP-pipName'))]"
       ],
       "tags": {
@@ -538,6 +562,108 @@
           "domainNameLabel": "[parameters('AdvDemoGatwayDns')]"
         }
       }
+    },
+    /*
+    Create Public IP for Client VM
+    */
+    {
+      "name": "[variables('AdvDemoClientPIP')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "AdvDemoClient-PIP"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('AdvDemoClientDNS')]"
+        }
+      }
+    },
+    /*
+    Create Client NIC
+    */
+    {
+      "name": "[variables('AdvDemoClientNICName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[variables('AdvDemoVnetID')]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('AdvDemoClientPIP'))]"
+      ],
+      "tags": {
+        "displayName": "AdvDemoClientNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "10.0.0.13",
+              "subnet": {
+                "id": "[variables('AdvDemoSubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('AdvDemoClientPIP'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    /* 
+    Create Client VM 
+    */
+    {
+      "name": "[parameters('AdvDemoClientName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('AdvDemoStorageName'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('AdvDemoWAPNicName'))]"
+      ],
+      "tags": {
+        "displayName": "AdvDemoClient"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('AdvDemoVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('AdvDemoClientName')]",
+          "adminUsername": "[parameters('AdvDemoAdminUsername')]",
+          "adminPassword": "[parameters('AdvDemoAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('AdvDemoClientImagePublisher')]",
+            "offer": "[variables('AdvDemoClientImageOffer')]",
+            "sku": "[parameters('AdvDemoClientOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "AdvDemoClientOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('AdvDemoStorageName')), '2016-01-01').primaryEndpoints.blob, variables('AdvDemoStorageAccountContainerName'), '/', parameters('AdvDemoClientName'), '-osdisk.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('AdvDemoClientNICName'))]"
+            }
+          ]
+        }
+      },
+      "resources": []
     }
   ],
   "outputs": {}
