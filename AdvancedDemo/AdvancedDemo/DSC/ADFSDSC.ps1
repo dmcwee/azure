@@ -7,8 +7,8 @@ Import-DscResource -ModuleName PSDesiredStateConfiguration
 
 Node $nodeName
   {
-	  WindowsFeature WAP {
-		  Name="Web-Application-Proxy"
+	  WindowsFeature ADFS {
+		  Name="ADFS-Federation"
 		  Ensure = "Present"
 	  }
   }
