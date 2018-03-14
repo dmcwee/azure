@@ -53,7 +53,7 @@ Node $nodeName
 	  }
 
 	  Script DomainSetup {
-		  DependsOn = "[WindowsFeature]ADDomainServices, [WindowsFeature]DNS, [WindowsFeature]ADTools, [Script]Drives"
+		  DependsOn = "[WindowsFeature]ADDomainServices", "[WindowsFeature]DNS", "[WindowsFeature]ADTools", "[Script]Drives"
 		  SetScript = {
 			$dbPath = $driveLetter + ":\AD\NTDS\DB"
 			$logPath = $driveLetter + ":\AD\NTDS\Log"
