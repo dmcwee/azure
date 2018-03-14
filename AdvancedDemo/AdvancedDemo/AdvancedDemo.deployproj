@@ -34,6 +34,7 @@
     <Content Include="DSC\WAPDSC.ps1" />
     <Content Include="DSC\ADFSDSC.ps1" />
     <Content Include="DSC\DomainControllerDSC.ps1" />
+    <None Include="New-VNetGateway.ps1" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>

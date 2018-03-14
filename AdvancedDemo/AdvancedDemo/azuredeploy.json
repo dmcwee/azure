@@ -299,7 +299,17 @@
                 "function": "Main"
               },
               "configurationArguments": {
-                "nodeName": "[parameters('AdvDemoDCName')]"
+                "nodeName": "[parameters('AdvDemoDCName')]",
+                "driveLetter": "L"
+                //"adminAccount": "[parameters('AdvDemoAdminPassword')]"
+              }
+            },
+            "protectedSettings": {
+              "configurationArguments":{
+                "adminAccount":{
+                  "UserName":"[parameters('AdvDemoAdminUserName')]",
+                  "Password":"[parameters('AdvDemoAdminPassword')]"
+                }
               }
             }
           }
