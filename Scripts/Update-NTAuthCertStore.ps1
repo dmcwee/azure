@@ -1,7 +1,8 @@
 param( [string]$CertExportFolder ) 
 
 $certs = Get-ChildItem cert:/localmachine/ca
-$certs | foreach { Export-Certificate -cert $_ -FilePath $($CertExportFolder + "\" + $_.Thumbprint + ".cer") }
+$certs | ForEach-Object { Export-Certificate -cert $_ -FilePath $($CertExportFolder + "\" + $_.Thumbprint + ".cer") }
 
-$certFiles = get-ChildItem $CertExportFolder | ? { $_.Name -like "*.cer" }
-$certFiles | foreach { certutil -dspublish -f $($_.Name) NTAuthCA }
+$certFiles = Get-ChildItem $CertExportFolder | Where-Object { $_.Name -like "*.cer" }
+$certFiles | ForEach-Object { write-host "certutil -dspublish -f $($_.FullName) NTAuthCA" }
+#$certFiles | foreach { certutil -dspublish -f $($_.FullName) NTAuthCA }
