@@ -300,16 +300,16 @@
               },
               "configurationArguments": {
                 "nodeName": "[parameters('AdvDemoDCName')]",
-                "driveLetter": "L"
-                //"adminAccount": "[parameters('AdvDemoAdminPassword')]"
+                "driveLetter": "L",
+                "adminAccount":{
+                  "UserName":"[parameters('AdvDemoAdminUserName')]",
+                  "Password":"PrivateSettingsRef:AdminPassword"
+                }
               }
             },
             "protectedSettings": {
-              "configurationArguments":{
-                "adminAccount":{
-                  "UserName":"[parameters('AdvDemoAdminUserName')]",
-                  "Password":"[parameters('AdvDemoAdminPassword')]"
-                }
+              "Items":{
+                "AdminPassword":"[parameters('AdvDemoAdminPassword')]"
               }
             }
           }
