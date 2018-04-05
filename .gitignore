@@ -3,3 +3,4 @@
 *.deployproj
 *.pubxml
 PublishProfiles/
+packages/
