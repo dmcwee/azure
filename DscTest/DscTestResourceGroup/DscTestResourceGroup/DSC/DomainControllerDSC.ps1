@@ -1,12 +1,32 @@
 Configuration Main
 {
 
-Param ( [string] $nodeName, [string] $driveLetter = "L", [PSCredential] $adminAccount )
+Param ( 
+	[string] $nodeName, 
+	[string] $driveLetter = "L"
+	#, [PSCredential] $adminAccount 
+)
 
 Import-DscResource -ModuleName PSDesiredStateConfiguration
 
 Node $nodeName
   {
+	  WindowsFeature ADDomainServices {
+		Name="AD-Domain-Services"
+		Ensure="Present"
+	  }
+
+	  WindowsFeature DNS {
+		Name="DNS"
+		Ensure="Present"
+	  }
+
+	  WindowsFeature ADTools {
+		Name="RSAT-AD-Tools"
+		Ensure = "Present"
+		IncludeAllSubFeature = $true
+	  }
+
 	  Script Drives {
 		  SetScript = {
 				Write-Verbose "Stopping ShellHWDetection Service"
@@ -39,24 +59,6 @@ Node $nodeName
 		  }
 	  }
 
-	  <#
-	  WindowsFeature ADDomainServices {
-		Name="AD-Domain-Services"
-		Ensure="Present"
-	  }
-
-	  WindowsFeature DNS {
-		Name="DNS"
-		Ensure="Present"
-	  }
-
-	  WindowsFeature ADTools {
-		Name="RSAT-AD-Tools"
-		Ensure = "Present"
-		IncludeAllSubFeature = $true
-	  }
-	  #>
-
 	  Script DomainSetup {
 		  DependsOn = "[Script]Drives"
 		  SetScript = {
@@ -64,6 +66,7 @@ Node $nodeName
 			$logPath = $driveLetter + ":\AD\NTDS\Log"
 			$sysVol = $driveLetter + ":\AD\SYSVOL"
 
+			Write-Verbose "Creating AD Folder on Drive $driveLetter"
 			#Testing Code...
 			New-Item -Path $($driveLetter + ":\") -Name "AD" -ItemType "directory"
 
@@ -86,7 +89,9 @@ Node $nodeName
 			@{ Result = $($driveLetter + ":\AD") }
 		  }
 		  TestScript = {
-			  return $(Test-Path $($driveLetter + ":\AD"))
+			  $result = Test-Path $($driveLetter + ":\AD")
+			  Write-Verbose "Testing $driveLetter :\AD to see if it exists: $result"
+			  return $result
 		  }
 	  }
   }

@@ -37,20 +37,17 @@
         "Windows-Server-Technical-Preview"
       ]
     },
-    "TestVmPipDnsName": {
-      "type": "string",
-      "minLength": 1
-    },
     "_artifactsLocation": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/dmcwee/azure/tspdemos/DscTest/DscTestResourceGroup/DscTestResourceGroup/DSC/TestVmDSC.zip"
+      //"defaultValue": "https://github.com/dmcwee/azure/blob/tspdemos/DscTest/DscTestResourceGroup/DscTestResourceGroup/DSC/TestVmDsc.zip?raw=true"
+      "defaultValue": "https://raw.githubusercontent.com/dmcwee/azure/tspdemos/DscTest/DscTestResourceGroup/DscTestResourceGroup/DSC/TestVmDsc.zip"
     },
     "_artifactsScript": {
       "type": "string",
       "metadata": {
         "description": "The powershell script (.ps1) to run on the VM"
       },
-      "defaultValue": "TestVmDSC.ps1"
+      "defaultValue": "DomainControllerDSC.ps1"
     }
   },
   "variables": {
@@ -182,7 +179,19 @@
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
-          }
+          },
+          "dataDisks": [
+            {
+              "name": "TestVmDataDisk",
+              "caching": "None",
+              "createOption": "Empty",
+              "diskSizeGB": "50",
+              "lun": 0,
+              "vhd": {
+                "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('dscteststorageName')), '2016-01-01').primaryEndpoints.blob, variables('TestVmStorageAccountContainerName'), '/', parameters('TestVmName'), '-datadisk.vhd')]"
+              }
+            }
+          ]
         },
         "networkProfile": {
           "networkInterfaces": [
@@ -216,10 +225,19 @@
                 "function": "Main"
               },
               "configurationArguments": {
-                "nodeName": "[parameters('TestVmName')]"
+                "nodeName": "[parameters('TestVmName')]",
+                "driveLetter": "L"
+                //,"adminAccount": {
+                //  "UserName": "[parameters('TestVmAdminUserName')]",
+                //  "Password": "PrivateSettingsRef:AdminPassword"
+                //}
               }
             },
             "protectedSettings": {
+              //"adminAccount": {
+              //  "UserName": "[parameters('TestVmAdminUserName')]",
+              //  "Password": "[parameters('TestVmAdminPassword')]"
+              //}
               //  "configurationUrlSasToken": "[parameters('_artifactsLocationSasToken')]"
             }
           }
