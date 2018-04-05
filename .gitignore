@@ -1,3 +1,5 @@
 .vs/
-*.proj.user
+*.user
+*.deployproj
 *.pubxml
+PublishProfiles/
