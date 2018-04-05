@@ -58,7 +58,7 @@
     "AdvDemoDCName": {
       "type": "string",
       "minLength": 1,
-      "defaultValue": "Demo-DC"
+      "defaultValue": "Demo-AD"
     },
     "AdvDemoADFSName": {
       "type": "string",
@@ -70,7 +70,12 @@
       "minLength": 1,
       "defaultValue": "Demo-WAP"
     },
-    "AdvDemoWAP-pipDnsName": {
+    "AdvDemoClientName":{
+      "type":"string",
+      "minLength": 1,
+      "defaultValue": "Demo-Client"
+    },
+    /*"AdvDemoWAP-pipDnsName": {
       "type": "string",
       "minLength": 1
     },
@@ -78,15 +83,10 @@
       "type": "string",
       "minLength": 1
     },
-    "AdvDemoClientName":{
-      "type":"string",
-      "minLength": 1,
-      "defaultValue": "Demo-Client"
-    },
     "AdvDemoClientDNS":{
       "type":"string",
       "minLength": 1
-    },
+    },*/
     "_artifactsLocation": {
       "type": "string",
       "metadata": {
@@ -299,18 +299,10 @@
                 "function": "Main"
               },
               "configurationArguments": {
-                "nodeName": "[parameters('AdvDemoDCName')]",
-                "driveLetter": "L",
-                "adminAccount":{
-                  "UserName":"[parameters('AdvDemoAdminUserName')]",
-                  "Password":"PrivateSettingsRef:AdminPassword"
-                }
+                "nodeName": "[parameters('AdvDemoDCName')]"
               }
             },
             "protectedSettings": {
-              "Items":{
-                "AdminPassword":"[parameters('AdvDemoAdminPassword')]"
-              }
             }
           }
         }
@@ -551,10 +543,10 @@
         "displayName": "AdvDemoWAP-pip"
       },
       "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('AdvDemoWAP-pipDnsName')]"
-        }
+        "publicIPAllocationMethod": "Dynamic"
+        //, "dnsSettings": {
+        //  "domainNameLabel": "[concat(variables('AdvDemoWAP-pipName'), "-wappip")]"
+        //}
       }
     },
     {
@@ -567,9 +559,9 @@
         "displayName": "AdvDemoGW-pip"
       },
       "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('AdvDemoGatwayDns')]"
+        "publicIPAllocationMethod": "Dynamic"
+        , "dnsSettings": {
+          "domainNameLabel": "[concat(resourceGroup().name, 'Gateway')]"
         }
       }
     },
@@ -586,10 +578,10 @@
         "displayName": "AdvDemoClient-PIP"
       },
       "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('AdvDemoClientDNS')]"
-        }
+        "publicIPAllocationMethod": "Dynamic"
+        //, "dnsSettings": {
+        //  "domainNameLabel": "[parameters('AdvDemoClientDNS')]"
+        //}
       }
     },
     /*

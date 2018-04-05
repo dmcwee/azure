@@ -28,7 +28,7 @@ namespace ClaimsWebApp
             ClaimsPrincipal cp = Page.User as ClaimsPrincipal;
             if(cp != null)
             {
-                signIn.Text = "You are signed in.";
+                signIn.Text = "You are signed in. Claims Provided: " + cp.Claims.Count();
 
                 if (AdfsClaims == null) { AdfsClaims = new List<SimpleClaimInfo>(); }
                 foreach(Claim c in cp.Claims)

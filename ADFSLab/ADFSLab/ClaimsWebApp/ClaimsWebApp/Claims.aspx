@@ -10,6 +10,26 @@
     <form id="form1" runat="server">
     <div>
         <h1><asp:Label ID="signIn" runat="server" /></h1>
+
+        <table>
+            <tr>
+                <td>Type</td>
+                <td>Value</td>
+                <td>Value Type</td>
+                <td>Subject Name</td>
+                <td>Issuer</td>
+            </tr>
+        <% foreach (var c in this.AdfsClaims) { %>
+            <tr>
+                <td><%= c.Type %></td>
+                <td><%= c.Value %></td>
+                <td><%= c.ValueType %></td>
+                <td><%= c.SubjectName %></td>
+                <td><%= c.Issuer %></td>
+            </tr>
+        <% } %>
+        </table>
+
         <asp:Repeater ID="claimsDisplay" DataMember="AdfsClaims" runat="server">
             <HeaderTemplate>
                 <table>
