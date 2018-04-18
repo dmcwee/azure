@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2027
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamlWeb", "SamlWeb\SamlWeb.csproj", "{990C8E48-6E1C-4BF2-B184-DAAFFEEAC58D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SamlReplay", "SamlReplay\SamlReplay.csproj", "{73FFA677-A7A3-415E-BA28-1C143EA88CCB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{990C8E48-6E1C-4BF2-B184-DAAFFEEAC58D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{990C8E48-6E1C-4BF2-B184-DAAFFEEAC58D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{990C8E48-6E1C-4BF2-B184-DAAFFEEAC58D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{990C8E48-6E1C-4BF2-B184-DAAFFEEAC58D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73FFA677-A7A3-415E-BA28-1C143EA88CCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73FFA677-A7A3-415E-BA28-1C143EA88CCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73FFA677-A7A3-415E-BA28-1C143EA88CCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73FFA677-A7A3-415E-BA28-1C143EA88CCB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F779962A-87AF-4751-8E57-E40F5EC7029B}
+	EndGlobalSection
+EndGlobal
