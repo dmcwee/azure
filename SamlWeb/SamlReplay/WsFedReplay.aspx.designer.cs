@@ -10,7 +10,7 @@
 namespace SamlReplay {
     
     
-    public partial class WebForm1 {
+    public partial class WSFedReplay {
         
         /// <summary>
         /// form1 control.
@@ -22,21 +22,30 @@ namespace SamlReplay {
         protected global::System.Web.UI.HtmlControls.HtmlForm form1;
         
         /// <summary>
-        /// samlSubmitUrl control.
+        /// wa control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlInputGenericControl samlSubmitUrl;
+        protected global::System.Web.UI.WebControls.TextBox wa;
         
         /// <summary>
-        /// wsFedSubmitUrl control.
+        /// wctx control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlInputGenericControl wsFedSubmitUrl;
+        protected global::System.Web.UI.WebControls.TextBox wctx;
+        
+        /// <summary>
+        /// wresult control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.TextBox wresult;
     }
 }

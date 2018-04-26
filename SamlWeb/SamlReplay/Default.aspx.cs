@@ -14,9 +14,14 @@ namespace SamlReplay
 
         }
 
-        protected void Unnamed_Click(object sender, EventArgs e)
+        protected void SubmitClicked(object sender, EventArgs e)
         {
-            Response.Redirect("./Replay.aspx?url=" + this.samlSubmitUrl.Text);
+            Response.Redirect("./Saml2Replay.aspx?url=" + this.samlSubmitUrl.Value);
+        }
+
+        protected void WsFedSubmitClicked(object sender, EventArgs e)
+        {
+            Response.Redirect("./WSFedReplay.aspx?url=" + this.wsFedSubmitUrl.Value);
         }
     }
 }
