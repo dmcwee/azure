@@ -82,6 +82,8 @@
     <Content Include="Content\bootstrap-grid.css.map" />
     <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\samlreplay - Web Deploy.pubxml" />
+    <Content Include="Scripts\replay.js" />
+    <Content Include="Scripts\samlreplay.js" />
     <Content Include="WsFedReplay.aspx" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
@@ -99,6 +101,7 @@
     <Content Include="Scripts\bootstrap.js.map" />
     <Content Include="Scripts\bootstrap.bundle.min.js.map" />
     <Content Include="Scripts\bootstrap.bundle.js.map" />
+    <Content Include="SamlReplay.Master" />
     <None Include="Scripts\jquery-3.0.0-vsdoc.js" />
     <Content Include="Scripts\jquery-3.0.0.js" />
     <Content Include="Scripts\jquery-3.0.0.min.js" />
@@ -147,6 +150,13 @@
     </Compile>
     <Compile Include="Default.aspx.designer.cs">
       <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="SamlReplay.Master.cs">
+      <DependentUpon>SamlReplay.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="SamlReplay.Master.designer.cs">
+      <DependentUpon>SamlReplay.Master</DependentUpon>
     </Compile>
     <Compile Include="WsFedReplay.aspx.cs">
       <DependentUpon>WsFedReplay.aspx</DependentUpon>
