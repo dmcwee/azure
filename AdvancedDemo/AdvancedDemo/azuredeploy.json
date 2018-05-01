@@ -75,6 +75,10 @@
       "minLength": 1,
       "defaultValue": "Demo-Client"
     },
+    "AdvDemoDomain":{
+      "type":"string",
+      "minLength": 1
+    }
     /*"AdvDemoWAP-pipDnsName": {
       "type": "string",
       "minLength": 1
@@ -299,10 +303,17 @@
                 "function": "Main"
               },
               "configurationArguments": {
-                "nodeName": "[parameters('AdvDemoDCName')]"
+                "nodeName": "[parameters('AdvDemoDCName')]",
+                "domainName":"[parameters('AdvDemoDomain')]"
               }
             },
             "protectedSettings": {
+              "configurationArguments":{
+                "adminAccount": {
+                  "UserName": "[parameters('AdvDemoAdminUserName')]",
+                  "Password": "[parameters('AdvDemoAdminPassword')]"
+                }
+              }
             }
           }
         }
