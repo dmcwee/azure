@@ -78,7 +78,7 @@
     "AdvDemoDomain":{
       "type":"string",
       "minLength": 1
-    }
+    },
     /*"AdvDemoWAP-pipDnsName": {
       "type": "string",
       "minLength": 1
@@ -572,7 +572,7 @@
       "properties": {
         "publicIPAllocationMethod": "Dynamic"
         , "dnsSettings": {
-          "domainNameLabel": "[concat(resourceGroup().name, 'Gateway')]"
+          "domainNameLabel": "[toLower(concat(resourceGroup().name, 'gateway'))]"
         }
       }
     },
