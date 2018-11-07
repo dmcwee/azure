@@ -123,17 +123,21 @@
 
     /* DC VM Variables */
     "AdvDemoDCNicName": "[concat(parameters('AdvDemoDCName'), '-NIC')]",
+    "AdvDemoDCScheduleName":"[toLower(concat('shutdown-computevm-', parameters('AdvDemoDCName')))]",
 
     /* ADFS VM Variables */
     "AdvDemoADFSNicName": "[concat(parameters('AdvDemoADFSName'), '-NIC')]",
+    "AdvDemoADFSScheduleName":"[toLower(concat('shutdown-computevm-', parameters('AdvDemoADFSName')))]",
 
     /* WAP VM Variables */
     "AdvDemoWAPNicName": "[concat(parameters('AdvDemoWAPName'), '-NIC')]",
     "AdvDemoWAP-pipName": "[concat(parameters('AdvDemoWAPName'), '-PIP')]",
+    "AdvDemoWAPScheduleName":"[toLower(concat('shutdown-computevm-', parameters('AdvDemoWAPName')))]",
 
     /* Client VM Variables */
     "AdvDemoClientNICName":"[concat(parameters('AdvDemoClientName'), '-NIC')]",
-    "AdvDemoClientPIP":"[concat(parameters('AdvDemoClientName'), '-PIP')]"
+    "AdvDemoClientPIP":"[concat(parameters('AdvDemoClientName'), '-PIP')]",
+    "AdvDemoClientScheduleName":"[toLower(concat('shutdown-computevm-', parameters('AdvDemoClientName')))]",
   },
   "resources": [
     /*
@@ -319,6 +323,32 @@
         }
       ]
     },
+    {
+      "comments": "",
+      "type": "microsoft.devtestlab/schedules",
+      "name": "[variables('AdvDemoDCScheduleName')]",
+      "apiVersion": "2016-05-15",
+      "location": "eastus",
+      "scale": null,
+      "properties": {
+          "status": "Enabled",
+          "taskType": "ComputeVmShutdownTask",
+          "dailyRecurrence": {
+              "time": "1900"
+          },
+          "timeZoneId": "Eastern Standard Time",
+          "notificationSettings": {
+              "status": "Disabled",
+              "timeInMinutes": 30
+          },
+          "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoDCName'))]",
+          "provisioningState": "Succeeded"
+          //, "uniqueIdentifier": "b6d93b68-528a-47cb-bf49-05b41aab59f1"
+      },
+      "dependsOn": [
+          "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoDCName'))]"
+      ]
+  },
     /*
     Create ADFS VM NIC
     */
@@ -427,7 +457,32 @@
         }
       ]
     },
-
+    {
+      "comments": "",
+      "type": "microsoft.devtestlab/schedules",
+      "name": "[variables('AdvDemoADFSScheduleName')]",
+      "apiVersion": "2016-05-15",
+      "location": "eastus",
+      "scale": null,
+      "properties": {
+          "status": "Enabled",
+          "taskType": "ComputeVmShutdownTask",
+          "dailyRecurrence": {
+              "time": "1900"
+          },
+          "timeZoneId": "Eastern Standard Time",
+          "notificationSettings": {
+              "status": "Disabled",
+              "timeInMinutes": 30
+          },
+          "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoADFSName'))]",
+          "provisioningState": "Succeeded"
+          //, "uniqueIdentifier": "b6d93b68-528a-47cb-bf49-05b41aab59f1"
+      },
+      "dependsOn": [
+          "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoADFSName'))]"
+      ]
+  },
     /*
     Create WAP NIC
     */
@@ -541,6 +596,32 @@
         }
       ]
     },
+    {
+      "comments": "",
+      "type": "microsoft.devtestlab/schedules",
+      "name": "[variables('AdvDemoWAPScheduleName')]",
+      "apiVersion": "2016-05-15",
+      "location": "eastus",
+      "scale": null,
+      "properties": {
+          "status": "Enabled",
+          "taskType": "ComputeVmShutdownTask",
+          "dailyRecurrence": {
+              "time": "1900"
+          },
+          "timeZoneId": "Eastern Standard Time",
+          "notificationSettings": {
+              "status": "Disabled",
+              "timeInMinutes": 30
+          },
+          "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoWAPName'))]",
+          "provisioningState": "Succeeded"
+          //, "uniqueIdentifier": "b6d93b68-528a-47cb-bf49-05b41aab59f1"
+      },
+      "dependsOn": [
+          "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoWAPName'))]"
+      ]
+  },
     /*
     Create Public IP for WAP
     */
@@ -677,6 +758,32 @@
         }
       },
       "resources": []
+    },
+    {
+      "comments": "",
+      "type": "microsoft.devtestlab/schedules",
+      "name": "[variables('AdvDemoClientScheduleName')]",
+      "apiVersion": "2016-05-15",
+      "location": "eastus",
+      "scale": null,
+      "properties": {
+          "status": "Enabled",
+          "taskType": "ComputeVmShutdownTask",
+          "dailyRecurrence": {
+              "time": "1900"
+          },
+          "timeZoneId": "Eastern Standard Time",
+          "notificationSettings": {
+              "status": "Disabled",
+              "timeInMinutes": 30
+          },
+          "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoClientName'))]",
+          "provisioningState": "Succeeded",
+          "uniqueIdentifier": "b6d93b68-528a-47cb-bf49-05b41aab59f1"
+      },
+      "dependsOn": [
+          "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoClientName'))]"
+      ]
     }
   ],
   "outputs": {}
