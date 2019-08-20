@@ -59,7 +59,7 @@
     },
     "_artifactsLocation": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/dmcwee/azure/tspdemos/SimpleDemo/SimpleDemo/CustomScripts/"
+      "defaultValue": "https://raw.githubusercontent.com/dmcwee/azure/master/Scripts/DSC/ADDSC.zip"
     },
     "_artifactFileName": {
       "type": "string",
@@ -143,85 +143,6 @@
     },
 
     /*
-    Create Public IP objects for the gateway
-    
-    {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(parameters('simpledemoVmNamePrefix'), '-gwpip')]",
-      "apiVersion": "2016-03-30",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "idleTimeoutInMinutes": 4
-      },
-      "resources": [],
-      "dependsOn": []
-    },
-    
-    It appears the Virtual Network Gateway is not supported in the Azure RM Template...
-    {
-      "type": "Microsoft.Network/virtualNetworkGateways",
-      "name": "[concat(parameters('simpledemoVmNamePrefix'), '-gateway')]",
-      "apiVersion": "2017-06-01",
-      "location": "[resourceGroup().location]",
-      "scale": null,
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "default",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('simpledemoVmNamePrefix'), '-gwpip'))]"
-              },
-              "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('simpledemonetName'), variables('simpledemoGatewaySubnetName'))]"
-              }
-            }
-          }
-        ],
-        "sku": {
-          "name": "Basic",
-          "tier": "Basic",
-          "capacity": 2
-        },
-        "gatewayType": "Vpn",
-        "vpnType": "RouteBased",
-        "enableBgp": false,
-        "activeActive": false,
-        "vpnClientConfiguration": {
-          "vpnClientAddressPool": {
-            "addressPrefixes": [
-              "192.168.10.0/24"
-            ]
-          },
-          "vpnClientProtocols": [
-            "SSTP"
-          ],
-          "vpnClientRootCertificates": [
-            {
-              "name": "AzureGatewayRootCert",
-              "properties": {
-                "publicCertData": "MIIC+TCCAeGgAwIBAgIQUlvZgSVPCo1FUmPWLj5yqDANBgkqhkiG9w0BAQsFADAf MR0wGwYDVQQDDBRHYXRld2F5VGVzdDJSb290Q2VydDAeFw0xODAxMjUxOTIwMzJa Fw0xOTAxMjUxOTQwMzJaMB8xHTAbBgNVBAMMFEdhdGV3YXlUZXN0MlJvb3RDZXJ0 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA++8zGneEVvFR6zy7gQIc b/Cu5ic9cTMHUOcb652Id1ocxZ0Ir4/oIywJgmALJSS7Li7lAAVj0GlJLYl84ljT W5umQJlvuRGZlSTMXJn1bMZ5kj4rRQAfq544Kj1dAwrs95L+9Pv3B+w/mG8r4Pby ko6XTSSHgT3PmSsTGVIytllj/kaxdSe8qcR6+sjbFtybdy2GONyLhHyccAMGEZz7 D0PpZIm2KOrtnJJZvMjWmYJzD79tcHJn1LtVKQ5azbCek7lhq5ocTgDAFA9Xfiso CLYEn+mZJG2BUn5scg+Z2IGfWRlqKBMwzbYkjBAkKuKqFvL/eAOlxudnP60BCGbI 1QIDAQABozEwLzAOBgNVHQ8BAf8EBAMCAgQwHQYDVR0OBBYEFInQD5lgUDAbAxEq wMUsccEibYBdMA0GCSqGSIb3DQEBCwUAA4IBAQC/l66A+dQ1QH3gTTaNA4tiS12A s67yGNJnNjJk6OARqTVtgbHf/uFWDJ2LDUIaV7FpXE3i1cFj+QTes/nEbaaBv3/s dGmJQdc5PJQEiglNT+45CfkRq/kdeWVMfhC8FBtjXHkAJRItyhBOe8+0ePD5/zuJ U1ueS0AJeqXin62+ES7ykzna7TMGQeNTgJfi2GarLfs50XyiseAHVyECuqJryhBG RQeE1L3gSCDir0RTbqGzO9tE3XyWhF4kDPrdoE+R5Dn7fMSqz4pCsNVMqe4UTBTC 9WLQVVKUTcFZYuNq7gAD2SPTcz38taVfCrvO+cfN07oM2ysnuhiKp+GtKhug"
-              }
-            }
-          ],
-          "vpnClientRevokedCertificates": []
-        },
-        "bgpSettings": {
-          "asn": 65515,
-          "bgpPeeringAddress": "10.0.1.254",
-          "peerWeight": 0
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('simpledemoVmNamePrefix'), '-gwpip'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('simpledemonetName'), variables('simpledemoGatewaySubnetName'))]"
-      ]
-    },
-    */
-
-    /*
     Create Public IP objects for each VM
     */
     {
@@ -286,7 +207,7 @@
         "name": "simpledemoVmCounter",
         "count": "[parameters('simpledemoDcCount')]"
       },
-      "name": "[concat(parameters('simpledemoVmNamePrefix'), '-DC', copyIndex())]",
+      "name": "[concat(parameters('simpledemoVmNamePrefix'), '-ad', copyIndex())]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
       "apiVersion": "2015-06-15",
@@ -295,14 +216,14 @@
         "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-nic'))]"
       ],
       "tags": {
-        "displayName": "[concat('DC ', copyIndex())]"
+        "displayName": "[concat('ad ', copyIndex())]"
       },
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('simpledemoVmSize')]"
         },
         "osProfile": {
-          "computerName": "[concat(parameters('simpledemoVmNamePrefix'), '-DC', copyIndex())]",
+          "computerName": "[concat(parameters('simpledemoVmNamePrefix'), '-ad', copyIndex())]",
           "adminUsername": "[parameters('simpledemodcAdminUsername')]",
           "adminPassword": "[parameters('simpledemodcAdminPassword')]"
         },
@@ -314,22 +235,22 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[concat(parameters('simpledemoVmNamePrefix'), '-dc', copyIndex(), '-osdisk')]",
+            "name": "[concat(parameters('simpledemoVmNamePrefix'), '-ad', copyIndex(), '-osdisk')]",
             "vhd": {
-              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName')), '2016-01-01').primaryEndpoints.blob, variables('simpledemodcStorageAccountContainerName'), '/', parameters('simpledemoVmNamePrefix'), '-dc', copyIndex(), '-osdisk.vhd')]"
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName')), '2016-01-01').primaryEndpoints.blob, variables('simpledemodcStorageAccountContainerName'), '/', parameters('simpledemoVmNamePrefix'), '-ad', copyIndex(), '-osdisk.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
           },
           "dataDisks": [
             {
-              "name": "[concat(parameters('simpledemoVmNamePrefix'), '-dc', copyIndex(), '-datadisk')]",
+              "name": "[concat(parameters('simpledemoVmNamePrefix'), '-ad', copyIndex(), '-datadisk')]",
               "caching": "None",
               "createOption": "Empty",
               "diskSizeGB": "50",
               "lun": 0,
               "vhd": {
-                "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName')), '2016-01-01').primaryEndpoints.blob, variables('simpledemodcStorageAccountContainerName'), '/', parameters('simpledemoVmNamePrefix'), '-dc', copyIndex(), '-datadisk.vhd')]"
+                "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName')), '2016-01-01').primaryEndpoints.blob, variables('simpledemodcStorageAccountContainerName'), '/', parameters('simpledemoVmNamePrefix'), '-ad', copyIndex(), '-datadisk.vhd')]"
               }
             }
           ]
@@ -342,33 +263,7 @@
           ]
         }
       },
-      "resources": [
-        {
-          "name": "DCPrep",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "apiVersion": "2016-03-30",
-          "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', concat(parameters('simpledemoVmNamePrefix'), '-DC', copyIndex()))]"
-          ],
-          "tags": {
-            "displayName": "DCPrep"
-          },
-          "properties": {
-            "publisher": "Microsoft.Compute",
-            "type": "CustomScriptExtension",
-            "typeHandlerVersion": "1.4",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "fileUris": [
-                "[concat(parameters('_artifactsLocation'), parameters('_artifactFileName'))]"
-              ],
-              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', parameters('_artifactFileName'))]"
-            },
-            "protectedSettings": {}
-          }
-        }
-      ]
+      "resources": [ ]
     }
   ],
   "outputs": {}

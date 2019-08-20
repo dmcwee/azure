@@ -96,12 +96,14 @@
       "metadata": {
         "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
       },
-      "defaultValue": "https://raw.githubusercontent.com/dmcwee/azure/tspdemos/AdvancedDemo/AdvancedDemo/DSC/AdvDemoDSC.zip"
+      "defaultValue": "https://raw.githubusercontent.com/dmcwee/azure/master/AdvancedDemo/AdvancedDemo/DSC/AdvDemoDSC.zip"
     }
   },
   "variables": {
-    "tmpDemoStorageName": "[concat('AdvDemoStorage', uniqueString(resourceGroup().id))]",
+    "tmpDemoStorageName": "[concat('Storage', uniqueString(resourceGroup().id))]",
     "AdvDemoStorageName": "[toLower(substring(variables('tmpDemoStorageName'), 0, min(16, length(variables('tmpDemoStorageName')))))]",
+
+    "AdvDemoNet": "[concat(resourceGroup().name, '-net')]",
 
     /* Windows OS Publisher Variables */
     "AdvDemoWinImagePublisher": "MicrosoftWindowsServer",
@@ -114,7 +116,7 @@
     "AdvDemoNetSubnet1Name": "Subnet-1",
     "AdvDemoNetSubnet1Prefix": "10.0.0.0/24",
     "AdvDemoGatewaySubnetPrefix":"10.0.2.0/24",
-    "AdvDemoVnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'AdvDemoNet')]",
+    "AdvDemoVnetID": "[resourceId('Microsoft.Network/virtualNetworks', variables('AdvDemoNet'))]",
     "AdvDemoSubnetRef": "[concat(variables('AdvDemoVnetID'), '/subnets/', variables('AdvDemoNetSubnet1Name'))]",
     "AdvDemoGatwayPIPName": "VNet-GWPip",
 
@@ -162,7 +164,7 @@
     Create Virtual Network
     */
     {
-      "name": "AdvDemoNet",
+      "name": "[variables('AdvDemoNet')]",
       "type": "Microsoft.Network/virtualNetworks",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
@@ -621,7 +623,7 @@
       "dependsOn": [
           "[resourceId('Microsoft.Compute/virtualMachines', parameters('AdvDemoWAPName'))]"
       ]
-  },
+    },
     /*
     Create Public IP for WAP
     */
