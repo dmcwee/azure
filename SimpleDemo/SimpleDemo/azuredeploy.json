@@ -13,26 +13,32 @@
         "Premium_LRS"
       ]
     },
-    "simpledemoVmNamePrefix": {
+    "vmNamePrefix": {
       "type": "string",
       "minLength": 1,
       "defaultValue": "TspDemo"
     },
-    "simpledemoDcCount": {
+    "vmCount": {
       "type": "int",
       "minValue": 1,
-      "maxValue": 8,
-      "defaultValue": 1
+      "maxValue": 8
     },
-    "simpledemodcAdminUserName": {
+    "adminUser": {
       "type": "string",
       "minLength": 1,
       "defaultValue": "labadmin"
     },
-    "simpledemodcAdminPassword": {
+    "adminPassword": {
       "type": "securestring"
     },
-    "simpledemodcWindowsOSVersion": {
+    "provisionType":{
+      "type":"string",
+      "allowedValues": [
+        "server",
+        "client"
+      ]
+    },
+    "serverOSVersion": {
       "type": "string",
       "defaultValue": "2016-Datacenter",
       "allowedValues": [
@@ -43,7 +49,16 @@
         "Windows-Server-Technical-Preview"
       ]
     },
-    "simpledemoVmSize": {
+    "clientOS":{
+      "type":"string",
+      "defaultValue":"Windows-10-N-x64",
+      "allowedValues": [
+        "Windows-10-N-x64",
+        "Win81-Ent-N-x64",
+        "Win7-SP1-Ent-N-x64"
+      ]
+    },
+    "vmSize": {
       "type": "string",
       "defaultValue": "Basic_A2",
       "allowedValues": [
@@ -72,9 +87,16 @@
     "simpledemostoreNameLength": "[min(24, length(variables('tempstoreName')))]",
     "simpledemostoreName": "[substring(variables('tempstoreName'), 0, variables('simpledemostoreNameLength'))]",
 
-    //OS Image Provider Variables
-    "simpledemodcImagePublisher": "MicrosoftWindowsServer",
-    "simpledemodcImageOffer": "WindowsServer",
+    "client":{
+      "imageProvider":"MicrosoftVisualStudio",
+      "imageOffer":"Windows",
+      "imageSku": "parameters('clientOS')"
+    },
+    "server":{
+      "imageProvider":"MicrosoftWindowsServer",
+      "imageOffer":"WindowsServer",
+      "imageSku": "parameters('serverOSVersion')"
+    },
 
     //Network Variables
     "simpledemonetName": "simpledemonet",
@@ -86,7 +108,9 @@
     "simpledemoGatewaySubnetName": "GatewaySubnet",
 
     //VM Variables
-    "simpledemodcStorageAccountContainerName": "vhds"
+    "simpledemodcStorageAccountContainerName": "vhds",
+
+    "vmInfo": "[variables(parameters('provisionType'))]"
   },
   "resources": [
     /*
@@ -148,10 +172,10 @@
     {
       "copy": {
         "name": "CorpNetPublicIPs",
-        "count": "[parameters('simpledemoDcCount')]"
+        "count": "[parameters('vmCount')]"
       },
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-pip')]",
+      "name": "[concat(parameters('vmNamePrefix'), copyIndex(), '-pip')]",
       "apiVersion": "2016-03-30",
       "location": "[resourceGroup().location]",
       "properties": {
@@ -168,9 +192,9 @@
     {
       "copy": {
         "name": "NicCreationCounter",
-        "count": "[parameters('simpledemoDcCount')]"
+        "count": "[parameters('vmCount')]"
       },
-      "name": "[concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-nic')]",
+      "name": "[concat(parameters('vmNamePrefix'), copyIndex(), '-nic')]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
       "apiVersion": "2016-03-30",
@@ -186,7 +210,7 @@
             "name": "ipconfig1",
             "properties": {
               "publicIpAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-pip'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmNamePrefix'), copyIndex(), '-pip'))]"
               },
               "privateIPAllocationMethod": "Static",
               "privateIPAddress": "[concat('10.0.0.', copyIndex(10))]",
@@ -200,65 +224,53 @@
     },
 
     /*
-    Create the DCs
+    Create the VMs
     */
     {
       "copy": {
-        "name": "simpledemoVmCounter",
-        "count": "[parameters('simpledemoDcCount')]"
+        "name": "simpledemovmCounter",
+        "count": "[parameters('vmCount')]"
       },
-      "name": "[concat(parameters('simpledemoVmNamePrefix'), '-ad', copyIndex())]",
+      "name": "[concat(parameters('vmNamePrefix'), '-', copyIndex())]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
       "apiVersion": "2015-06-15",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-nic'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmNamePrefix'), copyIndex(), '-nic'))]"
       ],
       "tags": {
-        "displayName": "[concat('ad ', copyIndex())]"
+        "displayName": "VMx"
       },
       "properties": {
         "hardwareProfile": {
-          "vmSize": "[parameters('simpledemoVmSize')]"
+          "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[concat(parameters('simpledemoVmNamePrefix'), '-ad', copyIndex())]",
-          "adminUsername": "[parameters('simpledemodcAdminUsername')]",
-          "adminPassword": "[parameters('simpledemodcAdminPassword')]"
+          "computerName": "[concat(parameters('vmNamePrefix'), '-', copyIndex())]",
+          "adminUsername": "[parameters('adminUser')]",
+          "adminPassword": "[parameters('adminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
-            "publisher": "[variables('simpledemodcImagePublisher')]",
-            "offer": "[variables('simpledemodcImageOffer')]",
-            "sku": "[parameters('simpledemodcWindowsOSVersion')]",
+            "publisher": "[variables('vmInfo').imageProvider]",
+            "offer": "[variables('vmInfo').imageOffer]",
+            "sku": "[variables('vmInfo').imageSku]",
             "version": "latest"
           },
           "osDisk": {
-            "name": "[concat(parameters('simpledemoVmNamePrefix'), '-ad', copyIndex(), '-osdisk')]",
+            "name": "[concat(parameters('vmNamePrefix'), copyIndex(), '-osdisk')]",
             "vhd": {
-              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName')), '2016-01-01').primaryEndpoints.blob, variables('simpledemodcStorageAccountContainerName'), '/', parameters('simpledemoVmNamePrefix'), '-ad', copyIndex(), '-osdisk.vhd')]"
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName')), '2016-01-01').primaryEndpoints.blob, variables('simpledemodcStorageAccountContainerName'), '/', parameters('vmNamePrefix'), copyIndex(), '-osdisk.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
-          },
-          "dataDisks": [
-            {
-              "name": "[concat(parameters('simpledemoVmNamePrefix'), '-ad', copyIndex(), '-datadisk')]",
-              "caching": "None",
-              "createOption": "Empty",
-              "diskSizeGB": "50",
-              "lun": 0,
-              "vhd": {
-                "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('simpledemostoreName')), '2016-01-01').primaryEndpoints.blob, variables('simpledemodcStorageAccountContainerName'), '/', parameters('simpledemoVmNamePrefix'), '-ad', copyIndex(), '-datadisk.vhd')]"
-              }
-            }
-          ]
+          }
         },
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('simpledemoVmNamePrefix'), copyIndex(), '-nic'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmNamePrefix'), copyIndex(), '-nic'))]"
             }
           ]
         }
