@@ -71,14 +71,6 @@
         "Standard_A3",
         "Standard_A4"
       ]
-    },
-    "_artifactsLocation": {
-      "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/dmcwee/azure/master/Scripts/DSC/ADDSC.zip"
-    },
-    "_artifactFileName": {
-      "type": "string",
-      "defaultValue": "DCPrep.ps1"
     }
   },
   "variables": {
